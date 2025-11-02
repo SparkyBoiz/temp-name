@@ -270,11 +270,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7889429243315513592}
-  - component: {fileID: 9179562521785248989}
   - component: {fileID: 7068944872425876219}
   - component: {fileID: 114223560566570185}
+  - component: {fileID: 1684754916415601957}
   m_Layer: 0
-  m_Name: Ghost
+  m_Name: Chasing Ghost
   m_TagString: Ghost
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -297,26 +297,6 @@ Transform:
   - {fileID: 5849816275798223300}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9179562521785248989
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8901812791785888815}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ed9b96d8a1c78842a15cb7d2fb93188, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Ghost
-  moveRadius: 10
-  idleDuration: 3
-  maxHealth: 10
-  healthBar: {fileID: 4555727993995860043}
-  batteryCharge: 0.2
-  walkSFX: {fileID: 0}
-  deadSFX: {fileID: 0}
-  isTracked: 0
 --- !u!195 &7068944872425876219
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -376,3 +356,28 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 1}
   m_Size: {x: 1, y: 2}
   m_Direction: 0
+--- !u!114 &1684754916415601957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8901812791785888815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 545789218c2d27b48982f18ed393b134, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChasingGhost
+  moveRadius: 0
+  idleDuration: 3
+  maxHealth: 10
+  healthBar: {fileID: 4555727993995860043}
+  batteryCharge: 0.3
+  isTracked: 0
+  detectionRange: 5
+  chaseSpeed: 8
+  losePlayerRange: 8
+  fleeSpeed: 10
+  fleeDuration: 3
+  controlInversionDuration: 5
+  minFleeDistance: 10

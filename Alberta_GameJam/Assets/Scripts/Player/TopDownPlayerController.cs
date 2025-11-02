@@ -18,8 +18,9 @@ namespace Game.Player
         public Game.Core.InputSystem_Actions inputActions;
         private Rigidbody2D _rb;
         private Vector2 _moveInput;
-        private SoundWord _soundWord;
         private Animator _animator;
+        private float nextMoveSoundTime;
+        private bool controlsInverted;
         public State state { get; private set; }
         public float battery { get; private set; }
         public Action<float> BatteryChanged;
@@ -30,9 +31,8 @@ namespace Game.Player
             _rb = GetComponent<Rigidbody2D>();
             _rb.gravityScale = 0f;
             _rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-
-            _soundWord = GetComponentInChildren<SoundWord>();
             _animator = GetComponentInChildren<Animator>();
+            nextMoveSoundTime = 0f;
 
 
             if (inputActions == null)
@@ -59,8 +59,21 @@ namespace Game.Player
 
         private void OnMove(InputAction.CallbackContext ctx)
         {
-            _moveInput = ctx.ReadValue<Vector2>();
+            Vector2 input = ctx.ReadValue<Vector2>();
+            // Invert the input if controls are inverted
+            _moveInput = controlsInverted ? -input : input;
             EnterMoving();
+        }
+
+        // Called by ChasingGhost to invert controls
+        public void InvertControls(bool inverted)
+        {
+            controlsInverted = inverted;
+            // If currently moving, update the move input
+            if (state == State.Moving)
+            {
+                _moveInput = controlsInverted ? -_moveInput : _moveInput;
+            }
         }
 
         private void OnCancelMove(InputAction.CallbackContext ctx)
@@ -121,7 +134,12 @@ namespace Game.Player
 
         void HandleMoving()
         {
-            _soundWord.Spawn(transform.position, Vector3.up, 1f);
+            // Play movement sound with proper timing
+            if (Time.time >= nextMoveSoundTime && _rb.linearVelocity.sqrMagnitude > 0.1f)
+            {
+                GameEvents.RequestSoundWord(SoundType.PlayerWalk, transform.position, Vector3.up, 0.7f);
+                nextMoveSoundTime = Time.time + 0.3f; // Slightly faster footsteps than ghosts
+            }
         }
 
         void HandleMovingPhysics()

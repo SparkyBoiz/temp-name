@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5722032463906001623}
   - component: {fileID: 8893545974195141675}
   m_Layer: 0
-  m_Name: SoundWord
+  m_Name: SoundWord_TipTap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -145,5 +145,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8c7cc20dbcb4f14d97fb68c13f3408f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SoundWord
-  texture: {fileID: 2800000, guid: 5236fb1d2345b434c87be84963a73f87, type: 3}
-  speed: 0
+  texture: {fileID: 2800000, guid: 90b2c3656a166a04cbff419b95641a69, type: 3}
+  speed: 5
+  playInterval: 1

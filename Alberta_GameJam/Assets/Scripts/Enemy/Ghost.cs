@@ -10,23 +10,24 @@ public class Ghost : MonoBehaviour
     [SerializeField] int maxHealth = 10;
     [SerializeField] Image healthBar;
     [SerializeField] float batteryCharge = 0.3f;
-    [SerializeField] SoundWord walkSFX;
-    [SerializeField] SoundWord deadSFX;
+    protected float nextWalkSoundTime;
 
     public enum State
     {
         Idle,
         Patrol,
         Trapped,
-        Dying
+        Dying,
+        Chasing,
+        Fleeing  // Added for running away behavior
     }
 
-    NavMeshAgent agent;
-    float idleTimer;
-    State state;
-    int health;
+    protected NavMeshAgent agent;
+    protected float idleTimer;
+    protected State state;
+    protected int health;
     public bool isTracked;
-    Animator animator;
+    protected Animator animator;
 
     void Awake()
     {
@@ -37,9 +38,16 @@ public class Ghost : MonoBehaviour
         EnterIdle();
         isTracked = false;
         animator = GetComponentInChildren<Animator>();
+        nextWalkSoundTime = Time.time; // Allow first sound immediately
     }
 
-    void Update()
+    protected virtual void Update()
+    {
+        HandleState();
+        UpdateHealthBarVisibility();
+    }
+
+    protected virtual void HandleState()
     {
         switch (state)
         {
@@ -55,13 +63,21 @@ public class Ghost : MonoBehaviour
             case State.Dying:
                 HandleDying();
                 break;
+            case State.Chasing:
+                // Base class doesn't handle chasing
+                break;
         }
-
-        if (isTracked) healthBar.gameObject.SetActive(true);
-        else healthBar.gameObject.SetActive(false);
     }
 
-    public void EnterTrapped(float duration)
+    protected virtual void UpdateHealthBarVisibility()
+    {
+        if (healthBar != null)
+        {
+            healthBar.gameObject.SetActive(isTracked);
+        }
+    }
+
+    public virtual void EnterTrapped(float duration)
     {
         if (agent != null)
         {
@@ -71,7 +87,7 @@ public class Ghost : MonoBehaviour
         StartCoroutine(TrappedTimer(duration));
     }
 
-    private System.Collections.IEnumerator TrappedTimer(float duration)
+    protected virtual System.Collections.IEnumerator TrappedTimer(float duration)
     {
         yield return new WaitForSeconds(duration);
         if (agent != null)
@@ -81,12 +97,12 @@ public class Ghost : MonoBehaviour
         EnterIdle();
     }
 
-    void HandleTrapped()
+    protected virtual void HandleTrapped()
     {
         // Do nothing while trapped
     }
 
-    void EnterIdle()
+    protected virtual void EnterIdle()
     {
         state = State.Idle;
         idleTimer = idleDuration;
@@ -96,7 +112,7 @@ public class Ghost : MonoBehaviour
         }
     }
 
-    void HandleIdle()
+    protected virtual void HandleIdle()
     {
         if (idleTimer > 0f)
         {
@@ -109,18 +125,32 @@ public class Ghost : MonoBehaviour
         }
     }
 
-    void EnterPatrol()
+    protected virtual void EnterPatrol()
     {
         state = State.Patrol;
-        FindNextWaypoint();
+        if (agent != null)
+        {
+            agent.isStopped = false;  // Make sure the agent isn't stopped
+            FindNextWaypoint();
+        }
     }
 
-    void HandlePatrol()
+    protected virtual void HandlePatrol()
     {
-        walkSFX.Spawn(transform.position, Vector3.up, 1f);
         if (agent == null || agent.pathPending)
         {
             return;
+        }
+
+        // Only play walk sound if we have a path and are moving
+        if (agent.hasPath && agent.remainingDistance > agent.stoppingDistance)
+        {
+            float currentTime = Time.time;
+            if (currentTime >= nextWalkSoundTime)
+            {
+                GameEvents.RequestSoundWord(SoundType.GhostWalk, transform.position, Vector3.right, 0.7f);
+                nextWalkSoundTime = currentTime + 0.5f; // Half second between footsteps
+            }
         }
 
         if (agent.remainingDistance <= agent.stoppingDistance)
@@ -132,16 +162,16 @@ public class Ghost : MonoBehaviour
         }
     }
 
-    void EnterDying()
+    protected virtual void EnterDying()
     {
         state = State.Dying;
         agent.isStopped = true;
         animator.SetTrigger("Die");
         TopDownPlayerController.Instance.ChargeBattery(batteryCharge);
-        deadSFX.Spawn(transform.position, Vector3.up, 3f);
+        GameEvents.RequestSoundWord(SoundType.GhostDeath, transform.position, Vector3.up, 1.5f);
     }
 
-    void HandleDying()
+    protected virtual void HandleDying()
     {
 
     }
