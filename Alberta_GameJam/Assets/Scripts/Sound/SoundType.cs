@@ -6,5 +6,5 @@ public enum SoundType
     GhostDeath,
     TrapCreak,
     PlayerWalk,
-    // Add more sound types here as needed
+    
 }

@@ -19,7 +19,7 @@ public class Ghost : MonoBehaviour
         Trapped,
         Dying,
         Chasing,
-        Fleeing  // Added for running away behavior
+        Fleeing
     }
 
     protected NavMeshAgent agent;
@@ -38,7 +38,7 @@ public class Ghost : MonoBehaviour
         EnterIdle();
         isTracked = false;
         animator = GetComponentInChildren<Animator>();
-        nextWalkSoundTime = Time.time; // Allow first sound immediately
+        nextWalkSoundTime = Time.time;
     }
 
     protected virtual void Update()
@@ -64,7 +64,6 @@ public class Ghost : MonoBehaviour
                 HandleDying();
                 break;
             case State.Chasing:
-                // Base class doesn't handle chasing
                 break;
         }
     }
@@ -99,7 +98,6 @@ public class Ghost : MonoBehaviour
 
     protected virtual void HandleTrapped()
     {
-        // Do nothing while trapped
     }
 
     protected virtual void EnterIdle()
@@ -130,7 +128,7 @@ public class Ghost : MonoBehaviour
         state = State.Patrol;
         if (agent != null)
         {
-            agent.isStopped = false;  // Make sure the agent isn't stopped
+            agent.isStopped = false;
             FindNextWaypoint();
         }
     }
@@ -142,14 +140,13 @@ public class Ghost : MonoBehaviour
             return;
         }
 
-        // Only play walk sound if we have a path and are moving
         if (agent.hasPath && agent.remainingDistance > agent.stoppingDistance)
         {
             float currentTime = Time.time;
             if (currentTime >= nextWalkSoundTime)
             {
                 GameEvents.RequestSoundWord(SoundType.GhostWalk, transform.position, Vector3.right, 0.7f);
-                nextWalkSoundTime = currentTime + 0.5f; // Half second between footsteps
+                nextWalkSoundTime = currentTime + 0.5f;
             }
         }
 
@@ -173,7 +170,6 @@ public class Ghost : MonoBehaviour
 
     protected virtual void HandleDying()
     {
-
     }
 
     void FindNextWaypoint()
