@@ -3,12 +3,10 @@ using Game.Player;
 
 public class ChasingGhost : Ghost
 {
-    [Header("Chase Settings")]
     [SerializeField] private float detectionRange = 5f;
     [SerializeField] private float chaseSpeed = 8f;
     [SerializeField] private float losePlayerRange = 8f;
 
-    [Header("Flee Settings")]
     [SerializeField] private float fleeSpeed = 10f;
     [SerializeField] private float fleeDuration = 3f;
     [SerializeField] private float controlInversionDuration = 5f;

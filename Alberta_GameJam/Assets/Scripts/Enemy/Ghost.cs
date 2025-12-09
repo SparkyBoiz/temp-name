@@ -170,6 +170,7 @@ public class Ghost : MonoBehaviour
 
     protected virtual void HandleDying()
     {
+        
     }
 
     void FindNextWaypoint()

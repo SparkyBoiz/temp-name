@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class UIBatteryBar : MonoBehaviour
 {
     Image bar;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         bar = GetComponent<Image>();

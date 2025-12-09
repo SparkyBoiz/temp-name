@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class SoundWordDisplay : MonoBehaviour
 {
-    [Tooltip("Configure different sound types with their own prefabs and settings")]
     [SerializeField] private List<SoundConfiguration> soundConfigs = new List<SoundConfiguration>();
 
     private Dictionary<int, Dictionary<SoundType, float>> lastPlayTimes = new Dictionary<int, Dictionary<SoundType, float>>();
