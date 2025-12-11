@@ -3,163 +3,81 @@ using Game.Player;
 
 public class ChasingGhost : Ghost
 {
-    [SerializeField] private float detectionRange = 5f;
-    [SerializeField] private float chaseSpeed = 8f;
-    [SerializeField] private float losePlayerRange = 8f;
+    [field: SerializeField] public float detectionRange { get; private set; } = 5f;
+    [field: SerializeField] public float chaseSpeed { get; private set; } = 8f;
+    [field: SerializeField] public float losePlayerRange { get; private set; } = 8f;
 
-    [SerializeField] private float fleeSpeed = 10f;
-    [SerializeField] private float fleeDuration = 3f;
-    [SerializeField] private float controlInversionDuration = 5f;
-    [SerializeField] private float minFleeDistance = 10f;
+    [field: SerializeField] public float fleeSpeed { get; private set; } = 10f;
+    [field: SerializeField] public float fleeDuration { get; private set; } = 3f;
+    [field: SerializeField] public float controlInversionDuration { get; private set; } = 5f;
+    [field: SerializeField] public float minFleeDistance { get; private set; } = 10f;
 
-    private float originalSpeed;
-    private State previousState;
-    private Transform playerTransform;
+    public float originalSpeed { get; private set; }
+    public Transform playerTransform { get; private set; }
 
-    protected void Start()
+    public ChasingState ChasingState { get; private set; }
+    public FleeingState FleeingState { get; private set; }
+
+    protected override void Awake()
     {
-        playerTransform = TopDownPlayerController.Instance.transform;
+        base.Awake();
+
         originalSpeed = agent.speed;
+
+        ChasingState = gameObject.AddComponent<ChasingState>();
+        ChasingState.Initialize(this, agent, animator);
+        FleeingState = gameObject.AddComponent<FleeingState>();
+        FleeingState.Initialize(this, agent, animator);
     }
 
-    protected override void HandleState()
+    protected override void Start()
     {
-        if (state != State.Trapped && state != State.Dying && state != State.Fleeing)
+        if (TopDownPlayerController.Instance != null)
         {
-            float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
-
-            if (state != State.Chasing && distanceToPlayer <= detectionRange)
-            {
-                StartChasing();
-            }
-            else if (state == State.Chasing && distanceToPlayer > losePlayerRange)
-            {
-                StopChasing();
-            }
-
-            if (state == State.Chasing)
-            {
-                HandleChase();
-                return;
-            }
+            playerTransform = TopDownPlayerController.Instance.transform;
         }
-        else if (state == State.Fleeing)
-        {
-            HandleFleeing();
-            return;
-        }
-
-        base.HandleState();
+        base.Start();
     }
 
-    private void StartChasing()
+    protected override void Update()
     {
-        if (state != State.Chasing)
+        if (currentState != TrappedState && currentState != DyingState && currentState != FleeingState && currentState != ChasingState)
         {
-            previousState = state;
-            state = State.Chasing;
-            agent.speed = chaseSpeed;
-            GameEvents.RequestSoundWord(SoundType.GhostWalk, transform.position, Vector3.up, 1.2f);
-        }
-    }
-
-    private void StopChasing()
-    {
-        if (state == State.Chasing)
-        {
-            agent.speed = originalSpeed;
-
-            if (previousState == State.Patrol)
+            if (playerTransform != null)
             {
-                EnterPatrol();
-            }
-            else
-            {
-                EnterIdle();
+                float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
+                if (distanceToPlayer <= detectionRange)
+                {
+                    ChangeState(ChasingState);
+                    return;
+                }
             }
         }
+
+        base.Update();
     }
 
-    private void HandleChase()
+#if UNITY_EDITOR
+    protected override void OnDrawGizmosSelected()
     {
-        if (agent == null || !agent.isActiveAndEnabled)
-            return;
+        base.OnDrawGizmosSelected();
 
-        agent.SetDestination(playerTransform.position);
-
-        float currentTime = Time.time;
-        if (currentTime >= nextWalkSoundTime)
-        {
-            GameEvents.RequestSoundWord(SoundType.GhostWalk, transform.position, Vector3.right, 1f);
-            nextWalkSoundTime = currentTime + 0.4f;
-        }
-    }
-
-    private void OnDrawGizmosSelected()
-    {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
-
+    
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, losePlayerRange);
     }
-
+#endif
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.GetComponent<TopDownPlayerController>() != null)
         {
-            StartFleeing();
+            ChangeState(FleeingState);
             InvertPlayerControls();
         }
     }
-
-    private void StartFleeing()
-    {
-        state = State.Fleeing;
-        agent.speed = fleeSpeed;
-        StartCoroutine(FleeingTimer());
-    }
-
-    private System.Collections.IEnumerator FleeingTimer()
-    {
-        yield return new WaitForSeconds(fleeDuration);
-        if (state == State.Fleeing)
-        {
-            StopFleeing();
-        }
-    }
-
-    private void StopFleeing()
-    {
-        agent.speed = originalSpeed;
-        EnterIdle();
-    }
-
-    private void HandleFleeing()
-    {
-        if (agent == null || !agent.isActiveAndEnabled || playerTransform == null)
-            return;
-
-        Vector2 fleeDirection = (Vector2)transform.position - (Vector2)playerTransform.position;
-
-        if (fleeDirection.magnitude < minFleeDistance)
-        {
-            Vector2 targetPosition = (Vector2)transform.position + fleeDirection.normalized * minFleeDistance;
-
-            if (UnityEngine.AI.NavMesh.SamplePosition(targetPosition, out var navHit, minFleeDistance, UnityEngine.AI.NavMesh.AllAreas))
-            {
-                agent.SetDestination(navHit.position);
-            }
-        }
-
-        float currentTime = Time.time;
-        if (currentTime >= nextWalkSoundTime)
-        {
-            GameEvents.RequestSoundWord(SoundType.GhostWalk, transform.position, Vector3.right, 1.2f);
-            nextWalkSoundTime = currentTime + 0.3f;
-        }
-    }
-
+    
     private void InvertPlayerControls()
     {
         var player = TopDownPlayerController.Instance;
@@ -169,7 +87,7 @@ public class ChasingGhost : Ghost
             StartCoroutine(ResetPlayerControlsTimer());
         }
     }
-
+    
     private System.Collections.IEnumerator ResetPlayerControlsTimer()
     {
         yield return new WaitForSeconds(controlInversionDuration);
@@ -178,17 +96,5 @@ public class ChasingGhost : Ghost
         {
             player.InvertControls(false);
         }
-    }
-
-    public override void EnterTrapped(float duration)
-    {
-        StopChasing();
-        base.EnterTrapped(duration);
-    }
-
-    protected override void EnterDying()
-    {
-        StopChasing();
-        base.EnterDying();
     }
 }
